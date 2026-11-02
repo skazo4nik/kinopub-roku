@@ -51,6 +51,8 @@ sub init()
     m.altIdx = 0
     m.altCount = 0
     m.minBw = 0
+    m.hlsTried = false
+    m.retryReq = invalid
     m.isTrailer = false
     m.fGenre = ""
     m.fGenreName = "Все"
@@ -1117,6 +1119,7 @@ sub startPlayback(req as Object)
     end if
     m.altIdx = alt
     m.altCount = stream.alts.Count()
+    m.hlsTried = (req.hlsTried = true)
     if stream.url = ""
         showMessage("Нет потока", "Для этого видео нет доступных ссылок. Проверьте подписку и настройки устройства на kino.pub (HLS4, HEVC, 4K).")
         return
@@ -1266,6 +1269,12 @@ sub onLaunch()
         if a.start <> invalid then m.autoStart = Int(Val(a.start))
         kpFetch("/v1/items/" + a.autoplay, {}, "onAutoItem", "auto")
     end if
+    if a.post <> invalid
+        pp = a.post.Split("|")
+        body = ""
+        if pp.Count() > 1 then body = pp[1]
+        kpFetch(pp[0], {}, "onMarkResult", "probe", "POST", "api", body)
+    end if
     if a.probe <> invalid
         q = a.probe.Split("?")
         pr = {}
@@ -1408,6 +1417,7 @@ sub showTrackPanel()
         n.title = "Одна дорожка"
     end if
     m.audioList.content = ar
+    print "KPTRK audio="; labels.Count(); " (raw "; avail.Count(); ") first="; labels[0]
 
     ' --- субтитры: по одному на язык ---
     subAvail = []
@@ -1486,6 +1496,30 @@ sub markProgress(secs as Integer, callback as String)
 end sub
 
 sub onMarkResult(event as Object)
+end sub
+
+sub onRetryDev(event as Object)
+    res = event.getData()
+    if res.json = invalid or res.json.device = invalid
+        stopPlayback(false)
+        showMessage("Ошибка воспроизведения", "Видеосервер kino.pub отвечает 403. Включите тип потока HLS2 в Настройках.")
+        return
+    end if
+    kpFetch("/v1/device/" + res.json.device.id.ToStr() + "/settings", {}, "onRetrySaved", "retry", "POST", "api", "streamingType=3")
+end sub
+
+sub onRetrySaved(event as Object)
+    kpFetch("/v1/items/" + m.retryReq.item.id.ToStr(), {}, "onRetryItem", "retry")
+end sub
+
+sub onRetryItem(event as Object)
+    res = event.getData()
+    if res.json = invalid or res.json.item = invalid
+        stopPlayback(false)
+        return
+    end if
+    r = m.retryReq
+    startPlayback({ item: res.json.item, season: r.season, epIdx: r.epIdx, start: r.start, hlsTried: true })
 end sub
 
 ' --- пропуск заставки (AniSkip) ---
@@ -1717,6 +1751,15 @@ sub onVideoState()
         if Instr(1, FormatJson(m.video.errorInfo), "403") > 0
             m.global.apiNote = "видеосервер отвечает 403"
             m.global.apiStatus = "error"
+            ' HLS4 иногда отдаёт 403 на части вариантов: переключаем устройство на HLS2 и повторяем
+            if m.play <> invalid and not m.isTrailer and not m.hlsTried and m.streamMeta.kind = "HLS4"
+                m.retryReq = m.play
+                m.video.control = "stop"
+                m.nextHint.text = "Видеосервер отдал 403, переключаю поток на HLS2…"
+                m.nextHint.visible = true
+                kpFetch("/v1/device/info", {}, "onRetryDev", "retry")
+                return
+            end if
         end if
         ' запасные типы потока при ошибке CDN
         if m.play <> invalid and not m.isTrailer and m.video.position < 5 and m.altIdx + 1 < m.altCount

@@ -108,6 +108,17 @@ sub execute()
         j = ParseJson(res.body)
         if j <> invalid
             if j.item = invalid then print "KPRAW "; m.top.path; " "; Left(res.body, 2500)
+            if j.item <> invalid and Instr(1, m.top.path, "/v1/watching") > 0
+                dump = ""
+                if j.item.seasons <> invalid
+                    for each sn in j.item.seasons
+                        for each ep in sn.episodes
+                            dump = dump + "S" + sn.number.ToStr() + "E" + ep.number.ToStr() + ":" + ep.status.ToStr() + "/" + ep.time.ToStr() + " "
+                        end for
+                    end for
+                end if
+                print "KPWATCH "; dump
+            end if
             if j.item <> invalid
                 line = ""
                 for each k in j.item

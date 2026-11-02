@@ -1734,6 +1734,10 @@ sub stopPlayback(save as Boolean)
     m.dirty = true
     m.detail.visible = true
     m.detail.setFocus(true)
+    if m.play <> invalid
+        pid = m.play.item.id.ToStr()
+        if m.detail.itemId <> pid then m.detail.itemId = pid
+    end if
     if m.isTrailer
         m.isTrailer = false
         m.detail.focusNow = true

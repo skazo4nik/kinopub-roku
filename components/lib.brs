@@ -155,11 +155,12 @@ function makeItemNode(it as Object) as Object
     n.ShortDescriptionLine1 = r
     if it.year <> invalid then n.ShortDescriptionLine2 = it.year.ToStr()
     if it.total <> invalid and it.watched <> invalid
-        sl = it.watched.ToStr() + " из " + it.total.ToStr()
+        n.ShortDescriptionLine2 = it.watched.ToStr() + " из " + it.total.ToStr()
+        left = it.total - it.watched
         if it.new <> invalid
-            if it.new > 0 then sl = sl + "  ·  +" + it.new.ToStr() + " нов."
+            if it.new > 0 then left = it.new
         end if
-        n.ShortDescriptionLine2 = sl
+        if left > 0 then n.NumEpisodes = left
     end if
     return n
 end function

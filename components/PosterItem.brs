@@ -24,6 +24,14 @@ sub refresh()
         ls.text = c.ShortDescriptionLine2
         badge = m.top.findNode("badge")
         badge.text = c.ShortDescriptionLine1
+        cb = m.top.findNode("cntBg")
+        cl = m.top.findNode("cnt")
+        cb.translation = [w - 56, 8]
+        cl.translation = [w - 56, 8]
+        hasCnt = (c.NumEpisodes > 0)
+        cb.visible = hasCnt
+        cl.visible = hasCnt
+        if hasCnt then cl.text = c.NumEpisodes.ToStr()
         visible = (c.ShortDescriptionLine1 <> "")
         badge.visible = visible
         m.top.findNode("badgeBg").visible = visible

@@ -14,6 +14,8 @@
         <Poster id="poster" loadDisplayMode="scaleToZoom" loadingBitmapUri="" />
         <Rectangle id="badgeBg" color="#000000CC" translation="[8,8]" width="76" height="34" />
         <Label id="badge" translation="[8,8]" width="76" height="34" horizAlign="center" vertAlign="center" font="font:SmallBoldSystemFont" color="#B388FF" />
+        <Rectangle id="cntBg" color="#B388FF" width="48" height="40" visible="false" />
+        <Label id="cnt" width="48" height="40" horizAlign="center" vertAlign="center" font="font:SmallBoldSystemFont" color="#2B0B4F" visible="false" />
         <Label id="title" color="#F6F0FF" font="font:SmallBoldSystemFont" />
         <Label id="sub" color="#A99BC4" font="font:SmallSystemFont" />
     </children>

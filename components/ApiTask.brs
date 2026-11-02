@@ -51,7 +51,9 @@ sub execute()
         if m.top.bodyParams.Count() > 0 then body = buildQuery(m.top.bodyParams)
     end if
     isApi = (m.top.kind = "api")
+    isExt = (m.top.kind = "ext")
     url = cfg.api + m.top.path
+    if isExt then url = m.top.path
     plain = buildQuery(params)
     if isApi then params.access_token = regRead("access_token")
     query = buildQuery(params)
@@ -59,9 +61,17 @@ sub execute()
     ' --- кэш списков ---
     ttl = 0
     if isApi and m.top.method = "GET" then ttl = cacheTtl(m.top.path)
+    if isExt
+        ttl = 43200
+        if Instr(1, url, "arm.haglund") > 0 then ttl = 604800
+    end if
     cpath = ""
     if ttl > 0
-        cpath = cacheFile(url + "?" + plain)
+        if isExt
+            cpath = cacheFile(url)
+        else
+            cpath = cacheFile(url + "?" + plain)
+        end if
         raw = ReadAsciiFile(cpath)
         if raw <> ""
             nl = Instr(1, raw, Chr(10))
@@ -79,7 +89,9 @@ sub execute()
     end if
 
     clock = CreateObject("roTimespan")
-    res = httpRequest(url + "?" + query, m.top.method, body)
+    fullUrl = url + "?" + query
+    if isExt then fullUrl = url
+    res = httpRequest(fullUrl, m.top.method, body)
     if isApi and res.code = 401
         if refreshTokens(cfg)
             params.access_token = regRead("access_token")
@@ -87,7 +99,7 @@ sub execute()
         end if
     end if
     ms = clock.TotalMilliseconds()
-    if res.code <> 401 and res.code <> 400 and res.code <> 404 then setStatus(res.code, ms)
+    if not isExt and res.code <> 401 and res.code <> 400 and res.code <> 404 then setStatus(res.code, ms)
     if res.code = 200 and cpath <> "" and res.body <> ""
         WriteAsciiFile(cpath, CreateObject("roDateTime").AsSeconds().ToStr() + Chr(10) + res.body)
     end if

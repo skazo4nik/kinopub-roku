@@ -42,6 +42,11 @@
         <Video id="video" visible="false" width="1920" height="1080" translation="[0,0]" />
 
         <Label id="trackHint" visible="false" translation="[60,980]" width="1800" font="font:SmallSystemFont" color="#FFFFFF" text="Вниз  —  озвучка и субтитры" />
+        <Group id="skipBtn" visible="false" translation="[1330,930]">
+            <Rectangle width="530" height="76" color="#F3E8FF" />
+            <Label id="skipText" width="530" height="76" horizAlign="center" vertAlign="center" font="font:MediumBoldSystemFont" color="#2B0B4F" />
+        </Group>
+        <Group id="skipHolder" />
         <Label id="nextHint" visible="false" translation="[1120,960]" width="720" horizAlign="right" font="font:MediumBoldSystemFont" color="#FFFFFF" />
         <Group id="trackPanel" visible="false">
             <Rectangle width="1920" height="1080" color="#000000" opacity="0.78" />

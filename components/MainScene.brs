@@ -40,6 +40,14 @@ sub init()
     m.nextTimer.observeField("fire", "onNextTick")
     m.global.observeField("apiStatus", "onApiStatus")
     m.global.observeField("apiNote", "onApiStatus")
+    m.skipBtn = m.top.findNode("skipBtn")
+    m.skipText = m.top.findNode("skipText")
+    m.skipHolder = m.top.findNode("skipHolder")
+    m.skipSegs = []
+    m.skipGen = 0
+    m.skipCur = -1
+    m.skipDismissed = {}
+    m.skipClock = CreateObject("roTimespan")
     m.isTrailer = false
     m.fGenre = ""
     m.fGenreName = "Все"
@@ -928,6 +936,7 @@ sub buildSettings()
         { key: "supportHdr", title: "Поддержка HDR", kind: "bool" }
         { key: "supportSsl", title: "Защищённое соединение (SSL)", kind: "bool" }
         { key: "mixedPlaylist", title: "Смешанный плейлист", kind: "bool" }
+        { key: "skip", title: "Кнопка «Пропустить заставку» (AniSkip)", kind: "local" }
         { key: "", title: "Рекомендуемые настройки (HLS4, HEVC, 4K)", kind: "recommended" }
         { key: "", title: "Выйти из аккаунта", kind: "logout" }
     ]
@@ -936,7 +945,10 @@ sub buildSettings()
         n = root.createChild("ContentNode")
         n.title = d.title
         n.ShortDescriptionLine1 = ""
-        if d.key <> ""
+        if d.kind = "local"
+            n.ShortDescriptionLine1 = "Вкл"
+            if regRead("skip_off") = "1" then n.ShortDescriptionLine1 = "Выкл"
+        else if d.key <> ""
             st = m.devSet[d.key]
             if st <> invalid
                 if d.kind = "list" then n.ShortDescriptionLine1 = selectedLabel(st)
@@ -963,6 +975,11 @@ end sub
 
 sub onSettingSelected(event as Object)
     d = m.setDefs[event.getData()]
+    if d.kind = "local"
+        if regRead("skip_off") = "1" then regDelete("skip_off") else regWrite("skip_off", "1")
+        buildSettings()
+        return
+    end if
     if d.kind = "bool"
         cur = 0
         st = m.devSet[d.key]
@@ -1110,6 +1127,7 @@ sub startPlayback(req as Object)
     m.video.visible = true
     m.video.setFocus(true)
     m.video.control = "play"
+    startSkipLookup(req)
     m.progressTimer.control = "start"
     m.isTrailer = false
     m.nextTimer.control = "start"
@@ -1451,6 +1469,130 @@ end sub
 sub onMarkResult(event as Object)
 end sub
 
+' --- пропуск заставки (AniSkip) ---
+function pad7(n as Dynamic) as String
+    sd = n.ToStr()
+    while Len(sd) < 7
+        sd = "0" + sd
+    end while
+    return sd
+end function
+
+sub resetSkip()
+    m.skipGen = m.skipGen + 1
+    m.skipSegs = []
+    m.skipDismissed = {}
+    m.skipCur = -1
+    if m.skipBtn.visible then hideSkip(false)
+end sub
+
+sub startSkipLookup(req as Object)
+    resetSkip()
+    if regRead("skip_off") = "1" then return
+    it = req.item
+    if it.imdb = invalid then return
+    season = 0
+    if req.season >= 0
+        sn = it.seasons[req.season].number
+        if sn <> invalid then season = sn
+    end if
+    ep = currentEpisode()
+    epNum = 1
+    if ep.number <> invalid then epNum = ep.number
+    tag = "k" + m.skipGen.ToStr() + ":" + season.ToStr() + ":" + epNum.ToStr()
+    kpFetch("https://arm.haglund.dev/api/v2/imdb?id=tt" + pad7(it.imdb), {}, "onSkipArm", tag, "GET", "ext")
+end sub
+
+sub onSkipArm(event as Object)
+    res = event.getData()
+    parts = res.tag.Split(":")
+    if Val(Mid(parts[0], 2)) <> m.skipGen then return
+    if res.code <> 200 or res.json = invalid then return
+    if Type(res.json) <> "roArray" then return
+    season = Int(Val(parts[1]))
+    epNum = Int(Val(parts[2]))
+    mal = invalid
+    for each e in res.json
+        if e.myanimelist <> invalid
+            s1 = e["thetvdb-season"]
+            if s1 = invalid then s1 = e["themoviedb-season"]
+            if season = 0
+                if mal = invalid then mal = e.myanimelist
+            else if s1 <> invalid
+                if s1 = season and mal = invalid then mal = e.myanimelist
+            end if
+        end if
+    end for
+    if mal = invalid and season = 1 and res.json.Count() > 0
+        mal = res.json[0].myanimelist
+    end if
+    if mal = invalid then return
+    url = "https://api.aniskip.com/v2/skip-times/" + mal.ToStr() + "/" + epNum.ToStr() + "?types=op&types=ed&types=mixed-op&types=mixed-ed&types=recap&episodeLength=0"
+    kpFetch(url, {}, "onSkipTimes", parts[0], "GET", "ext")
+end sub
+
+sub onSkipTimes(event as Object)
+    res = event.getData()
+    if Val(Mid(res.tag, 2)) <> m.skipGen then return
+    if res.code <> 200 or res.json = invalid then return
+    if Type(res.json) <> "roAssociativeArray" then return
+    if res.json.found = invalid then return
+    if res.json.results = invalid then return
+    if res.json.found = false then return
+    segs = []
+    for each r in res.json.results
+        if r.interval <> invalid and r.skipType <> invalid
+            segs.Push({ s: r.interval.startTime, e: r.interval.endTime, kind: r.skipType })
+        end if
+    end for
+    m.skipSegs = segs
+end sub
+
+function skipLabel(kind as String) as String
+    if kind = "ed" or kind = "mixed-ed" then return "Пропустить титры"
+    if kind = "recap" then return "Пропустить пересказ"
+    return "Пропустить заставку"
+end function
+
+sub checkSkip()
+    if m.skipSegs.Count() = 0 then return
+    if not m.video.visible or m.isTrailer or m.trackPanel.visible then return
+    now = m.video.position
+    cur = -1
+    for i = 0 to m.skipSegs.Count() - 1
+        sg = m.skipSegs[i]
+        if now >= sg.s - 1 and now < sg.e - 2 then cur = i
+    end for
+    if cur = -1
+        if m.skipBtn.visible then hideSkip(false)
+        return
+    end if
+    if m.skipBtn.visible
+        if m.skipClock.TotalSeconds() > 15 then hideSkip(true)
+        return
+    end if
+    if m.skipDismissed.DoesExist("i" + cur.ToStr()) then return
+    if m.video.state <> "playing" then return
+    m.skipCur = cur
+    m.skipText.text = skipLabel(m.skipSegs[cur].kind) + "   ·   OK"
+    m.skipBtn.visible = true
+    m.skipClock.Mark()
+    m.skipHolder.setFocus(true)
+end sub
+
+sub hideSkip(dismiss as Boolean)
+    if dismiss and m.skipCur >= 0 then m.skipDismissed["i" + m.skipCur.ToStr()] = true
+    m.skipBtn.visible = false
+    if m.video.visible then m.video.setFocus(true)
+end sub
+
+sub doSkip()
+    if m.skipCur >= 0 and m.skipCur < m.skipSegs.Count()
+        m.video.seek = m.skipSegs[m.skipCur].e
+    end if
+    hideSkip(true)
+end sub
+
 ' --- состояние сервера (слева внизу) ---
 sub onApiStatus()
     st = m.global.apiStatus
@@ -1503,6 +1645,7 @@ function nextEpisodePos() as Dynamic
 end function
 
 sub onNextTick()
+    checkSkip()
     if not m.video.visible or m.isTrailer
         m.nextHint.visible = false
         return
@@ -1577,6 +1720,7 @@ sub onFinished()
 end sub
 
 sub stopPlayback(save as Boolean)
+    resetSkip()
     m.nextHint.visible = false
     m.nextTimer.control = "stop"
     m.statsPanel.visible = false
@@ -1607,6 +1751,18 @@ end sub
 ' ============ пульт ============
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if not press then return false
+    if m.video.visible and m.skipBtn.visible
+        if key = "OK"
+            doSkip()
+            return true
+        else if key = "play"
+            if m.video.state = "paused" then m.video.control = "resume" else m.video.control = "pause"
+            return true
+        else if key <> "back"
+            hideSkip(true)
+            return true
+        end if
+    end if
     if m.video.visible
         if m.trackPanel.visible
             if key = "back"

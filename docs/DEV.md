@@ -22,6 +22,7 @@
 | Подборки | `GET /v1/collections`, `/v1/collections/view?id=` |
 | Закладки | `GET /v1/bookmarks`, `/v1/bookmarks/{id}` |
 | Справочники | `GET /v1/genres`, `/v1/countries`, `/v1/types` |
+| Заставки | `GET https://arm.haglund.dev/api/v2/imdb?id=tt…` (IMDb → MAL по сезонам), `GET https://api.aniskip.com/v2/skip-times/{mal}/{серия}` |
 | Устройство | `GET /v1/device/info`, `POST /v1/device/{id}/settings`, `POST /v1/device/notify` |
 
 Особенности: «изменяющие» запросы в API делаются через GET; 4K — не тип, а фильтр `quality=4k`.

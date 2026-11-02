@@ -1575,6 +1575,7 @@ sub checkSkip()
     if m.video.state <> "playing" then return
     m.skipCur = cur
     m.skipText.text = skipLabel(m.skipSegs[cur].kind) + "   ·   OK"
+    print "KPSKIP show "; m.skipSegs[cur].kind; " "; m.skipSegs[cur].s; "-"; m.skipSegs[cur].e; " pos="; now
     m.skipBtn.visible = true
     m.skipClock.Mark()
     m.skipHolder.setFocus(true)
@@ -1589,6 +1590,7 @@ end sub
 sub doSkip()
     if m.skipCur >= 0 and m.skipCur < m.skipSegs.Count()
         m.video.seek = m.skipSegs[m.skipCur].e
+        print "KPSKIP seek "; m.skipSegs[m.skipCur].e
     end if
     hideSkip(true)
 end sub

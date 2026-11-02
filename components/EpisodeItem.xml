@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="EpisodeItem" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="refresh" />
+        <field id="width" type="float" onChange="refresh" />
+        <field id="height" type="float" onChange="refresh" />
+        <field id="itemHasFocus" type="boolean" onChange="refresh" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/EpisodeItem.brs" />
+    <children>
+        <Rectangle id="bg" color="#F3E8FF" opacity="0" />
+        <Label id="title" vertAlign="center" font="font:MediumSystemFont" color="#F6F0FF" />
+        <Label id="status" vertAlign="center" horizAlign="right" font="font:SmallSystemFont" color="#A99BC4" />
+    </children>
+</component>

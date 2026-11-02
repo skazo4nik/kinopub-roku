@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+    <interface>
+        <field id="launchArgs" type="assocarray" onChange="onLaunch" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/lib.brs" />
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="#12071F" />
+
+        <Group id="appView" visible="false">
+            <Rectangle width="300" height="1080" color="#1D0D36" />
+            <Label text="KINO.PUB" translation="[40,60]" font="font:LargeBoldSystemFont" color="#B388FF" />
+            <Rectangle id="apiDot" translation="[28,1006]" width="14" height="14" color="#3DDC84" />
+            <Label id="apiText" translation="[52,992]" width="236" height="60" wrap="true" font="font:SmallSystemFont" color="#A99BC4" text="Kino.pub: работает" />
+            <MarkupList id="menu" translation="[24,170]" itemComponentName="MenuItem" itemSize="[252,64]" itemSpacing="[0,6]" numRows="9" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+
+            <Group id="content" translation="[340,0]">
+                <Label id="sectionTitle" translation="[0,50]" width="1500" height="56" font="font:LargeBoldSystemFont" color="#FFFFFF" />
+                <Label id="hint" translation="[0,106]" width="1500" height="30" font="font:SmallSystemFont" color="#A99BC4" />
+                <RowList id="rows" translation="[0,150]" visible="false" itemComponentName="PosterItem" itemSize="[1580,460]" numRows="2" rowItemSize="[[220,400]]" rowItemSpacing="[[24,0]]" rowLabelOffset="[[0,4]]" showRowLabel="[true]" rowLabelColor="#C4B8DA" focusXOffset="[0]" drawFocusFeedback="false" rowFocusAnimationStyle="floatingFocus" />
+                <MarkupList id="setList" translation="[0,150]" visible="false" itemComponentName="EpisodeItem" itemSize="[1100,72]" itemSpacing="[0,8]" numRows="9" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+                <MarkupGrid id="grid" translation="[0,150]" visible="false" itemComponentName="PosterItem" itemSize="[220,400]" itemSpacing="[24,26]" numColumns="6" numRows="2" drawFocusFeedback="false" vertFocusAnimationStyle="floatingFocus" />
+                <Group id="kbGroup" visible="false">
+                    <Rectangle translation="[0,160]" width="596" height="60" color="#2A1450" />
+                    <Label id="query" translation="[16,160]" width="570" height="60" vertAlign="center" font="font:MediumSystemFont" color="#FFFFFF" />
+                    <MarkupGrid id="kb" translation="[0,236]" itemComponentName="KeyItem" itemSize="[80,60]" itemSpacing="[6,6]" numColumns="7" numRows="7" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+                    <Group id="kbBar" translation="[0,580]">
+                        <KeyItem id="barLang" />
+                        <KeyItem id="barSym" translation="[128,0]" />
+                        <KeyItem id="barSpace" translation="[256,0]" />
+                        <KeyItem id="barDel" translation="[496,0]" />
+                    </Group>
+                </Group>
+                <Label id="empty" translation="[0,300]" width="1000" height="60" font="font:MediumSystemFont" color="#A99BC4" visible="false" />
+                <Label id="loading" text="Загрузка…" translation="[0,300]" width="1000" height="60" font="font:MediumSystemFont" color="#A99BC4" visible="false" />
+            </Group>
+        </Group>
+
+        <AuthScreen id="auth" visible="false" />
+        <DetailScreen id="detail" visible="false" />
+        <Video id="video" visible="false" width="1920" height="1080" translation="[0,0]" />
+
+        <Label id="trackHint" visible="false" translation="[60,980]" width="1800" font="font:SmallSystemFont" color="#FFFFFF" text="Вниз  —  озвучка и субтитры" />
+        <Label id="nextHint" visible="false" translation="[1120,960]" width="720" horizAlign="right" font="font:MediumBoldSystemFont" color="#FFFFFF" />
+        <Group id="trackPanel" visible="false">
+            <Rectangle width="1920" height="1080" color="#000000" opacity="0.78" />
+            <Rectangle translation="[230,130]" width="1460" height="820" color="#1D0D36" />
+            <Label text="Озвучка" translation="[270,160]" width="800" font="font:MediumBoldSystemFont" color="#B388FF" />
+            <Label text="Субтитры" translation="[1190,160]" width="400" font="font:MediumBoldSystemFont" color="#B388FF" />
+            <MarkupList id="audioList" translation="[260,225]" itemComponentName="TrackItem" itemSize="[880,64]" itemSpacing="[0,6]" numRows="9" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+            <MarkupList id="subList" translation="[1180,225]" itemComponentName="TrackItem" itemSize="[470,64]" itemSpacing="[0,6]" numRows="9" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+            <Label text="Влево / Вправо — переключение списков    ·    Назад — закрыть" translation="[270,895]" width="1300" font="font:SmallSystemFont" color="#A99BC4" />
+        </Group>
+        <Group id="pickPanel" visible="false">
+            <Rectangle width="1920" height="1080" color="#000000" opacity="0.8" />
+            <Rectangle translation="[600,200]" width="720" height="640" color="#1D0D36" />
+            <Label id="pickTitle" translation="[640,230]" width="640" font="font:MediumBoldSystemFont" color="#B388FF" />
+            <MarkupList id="pickList" translation="[640,300]" itemComponentName="MenuItem" itemSize="[640,64]" itemSpacing="[0,6]" numRows="7" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+        </Group>
+        <Group id="statsPanel" visible="false" translation="[40,40]">
+            <Rectangle width="820" height="372" color="#000000" opacity="0.66" />
+            <Label id="statsText" translation="[20,12]" width="780" height="348" wrap="true" lineSpacing="4" font="font:SmallSystemFont" color="#FFFFFF" />
+        </Group>
+        <Timer id="statsTimer" duration="1" repeat="true" />
+        <Timer id="hintTimer" duration="6" repeat="false" />
+        <Timer id="searchTimer" duration="0.7" repeat="false" />
+        <Timer id="progressTimer" duration="15" repeat="true" />
+        <Timer id="nextTimer" duration="1" repeat="true" />
+    </children>
+</component>

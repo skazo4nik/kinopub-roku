@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="DetailScreen" extends="Group">
+    <interface>
+        <field id="itemId" type="string" alwaysNotify="true" onChange="onItemId" />
+        <field id="refresh" type="boolean" alwaysNotify="true" onChange="onRefresh" />
+        <field id="focusNow" type="boolean" alwaysNotify="true" onChange="onFocusNow" />
+        <field id="playRequest" type="assocarray" alwaysNotify="true" />
+        <field id="trailerRequest" type="assocarray" alwaysNotify="true" />
+        <field id="closed" type="boolean" alwaysNotify="true" />
+        <field id="authFailed" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/lib.brs" />
+    <script type="text/brightscript" uri="pkg:/components/DetailScreen.brs" />
+    <children>
+        <Group id="focusHolder" />
+        <Rectangle width="1920" height="1080" color="#12071F" />
+        <Poster id="backdrop" width="1920" height="1080" opacity="0.25" loadDisplayMode="scaleToZoom" />
+        <Rectangle width="1920" height="1080" color="#12071F" opacity="0.6" />
+        <Poster id="poster" translation="[100,110]" width="400" height="600" loadDisplayMode="scaleToZoom" />
+        <Label id="title" translation="[560,80]" width="1260" height="64" font="font:LargeBoldSystemFont" color="#FFFFFF" />
+        <Label id="orig" translation="[560,146]" width="1260" height="36" font="font:MediumSystemFont" color="#A99BC4" />
+        <Label id="meta" translation="[560,188]" width="1260" height="36" font="font:SmallSystemFont" color="#B388FF" />
+        <Group id="ratings" translation="[560,232]">
+            <Label id="rImdb" width="320" height="40" font="font:MediumBoldSystemFont" color="#F5C518" />
+            <Label id="rKp" translation="[340,0]" width="360" height="40" font="font:MediumBoldSystemFont" color="#FF7A1A" />
+            <Label id="rKino" translation="[720,0]" width="500" height="40" font="font:MediumBoldSystemFont" color="#B388FF" />
+        </Group>
+        <Rectangle id="descFrame" translation="[544,284]" width="1296" height="208" color="#3B2070" visible="false" />
+        <Label id="plot" translation="[560,292]" width="1264" height="130" wrap="true" numLines="4" lineSpacing="4" font="font:SmallSystemFont" color="#E4DCF2" />
+        <Label id="people" translation="[560,428]" width="1264" height="60" wrap="true" numLines="2" font="font:SmallSystemFont" color="#A99BC4" />
+        <Label id="descHint" visible="false" translation="[1440,462]" width="380" height="26" horizAlign="right" font="font:SmallSystemFont" color="#B388FF" text="OK — читать полностью" />
+        <KeyItem id="playBtn" translation="[560,512]" />
+        <KeyItem id="watchBtn" translation="[1132,512]" />
+        <KeyItem id="trailerBtn" translation="[1216,512]" visible="false" />
+        <Label id="watchLabel" translation="[1304,512]" width="520" height="72" vertAlign="center" font="font:SmallSystemFont" color="#A99BC4" />
+        <Label id="markHint" visible="false" translation="[560,594]" width="1260" height="30" font="font:SmallSystemFont" color="#8E80AD" text="*  —  отметка просмотра: на серии — серия, на сезоне — весь сезон" />
+        <MarkupList id="seasons" vertFocusAnimationStyle="floatingFocus" translation="[560,630]" itemComponentName="MenuItem" itemSize="[220,64]" itemSpacing="[0,8]" numRows="5" drawFocusFeedback="false" visible="false" />
+        <MarkupList id="episodes" vertFocusAnimationStyle="floatingFocus" translation="[820,630]" itemComponentName="EpisodeItem" itemSize="[1000,64]" itemSpacing="[0,8]" numRows="5" drawFocusFeedback="false" visible="false" />
+        <Group id="infoPanel" visible="false">
+            <Rectangle width="1920" height="1080" color="#000000" opacity="0.88" />
+            <Rectangle translation="[260,70]" width="1400" height="940" color="#1D0D36" />
+            <Label id="infoTitle" translation="[310,100]" width="1300" height="56" font="font:LargeBoldSystemFont" color="#FFFFFF" />
+            <ScrollableText id="infoText" translation="[310,175]" width="1300" height="780" font="font:MediumSystemFont" />
+            <Label text="Вверх / Вниз — прокрутка    ·    Назад — закрыть" translation="[310,960]" width="1300" font="font:SmallSystemFont" color="#8E80AD" />
+        </Group>
+        <Label id="loading" text="Загрузка…" translation="[0,500]" width="1920" horizAlign="center" font="font:MediumSystemFont" color="#A99BC4" />
+    </children>
+</component>

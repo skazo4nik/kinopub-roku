@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PosterItem" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="refresh" />
+        <field id="width" type="float" onChange="refresh" />
+        <field id="height" type="float" onChange="refresh" />
+        <field id="itemHasFocus" type="boolean" onChange="refresh" />
+        <field id="rowListHasFocus" type="boolean" onChange="refresh" />
+        <field id="gridHasFocus" type="boolean" onChange="refresh" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/PosterItem.brs" />
+    <children>
+        <Rectangle id="frame" color="#FFFFFF" visible="false" />
+        <Poster id="poster" loadDisplayMode="scaleToZoom" loadingBitmapUri="" />
+        <Rectangle id="badgeBg" color="#000000CC" translation="[8,8]" width="76" height="34" />
+        <Label id="badge" translation="[8,8]" width="76" height="34" horizAlign="center" vertAlign="center" font="font:SmallBoldSystemFont" color="#B388FF" />
+        <Label id="title" color="#F6F0FF" font="font:SmallBoldSystemFont" />
+        <Label id="sub" color="#A99BC4" font="font:SmallSystemFont" />
+    </children>
+</component>

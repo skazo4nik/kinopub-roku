@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="TrackItem" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="refresh" />
+        <field id="width" type="float" onChange="refresh" />
+        <field id="height" type="float" onChange="refresh" />
+        <field id="itemHasFocus" type="boolean" onChange="refresh" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/TrackItem.brs" />
+    <children>
+        <Rectangle id="bg" color="#F3E8FF" opacity="0" />
+        <Poster id="icon" width="36" height="36" visible="false" />
+        <Label id="label" color="#C4B8DA" vertAlign="center" horizAlign="left" font="font:SmallSystemFont" />
+    </children>
+</component>

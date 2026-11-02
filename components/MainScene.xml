@@ -11,8 +11,8 @@
         <Group id="appView" visible="false">
             <Rectangle width="300" height="1080" color="#1D0D36" />
             <Label text="KINO.PUB" translation="[40,60]" font="font:LargeBoldSystemFont" color="#B388FF" />
-            <Rectangle id="apiDot" translation="[28,1006]" width="14" height="14" color="#3DDC84" />
-            <Label id="apiText" translation="[52,992]" width="236" height="60" wrap="true" font="font:SmallSystemFont" color="#A99BC4" text="Kino.pub: работает" />
+            <Rectangle id="apiDot" translation="[24,918]" width="14" height="14" color="#3DDC84" />
+            <Label id="apiText" translation="[48,906]" width="240" height="110" wrap="true" numLines="4" lineSpacing="2" font="font:SmallSystemFont" color="#A99BC4" text="Kino.pub: работает" />
             <MarkupList id="menu" translation="[24,170]" itemComponentName="MenuItem" itemSize="[252,64]" itemSpacing="[0,6]" numRows="9" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
 
             <Group id="content" translation="[340,0]">

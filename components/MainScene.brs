@@ -48,6 +48,9 @@ sub init()
     m.skipCur = -1
     m.skipDismissed = {}
     m.skipClock = CreateObject("roTimespan")
+    m.altIdx = 0
+    m.altCount = 0
+    m.minBw = 0
     m.isTrailer = false
     m.fGenre = ""
     m.fGenreName = "Все"
@@ -1105,6 +1108,15 @@ sub startPlayback(req as Object)
     m.play = req
     ep = currentEpisode()
     stream = pickStream(ep.files)
+    alt = 0
+    if req.altIdx <> invalid then alt = req.altIdx
+    if alt > 0 and alt < stream.alts.Count()
+        stream.url = stream.alts[alt].url
+        stream.fmt = stream.alts[alt].fmt
+        stream.kind = stream.alts[alt].kind
+    end if
+    m.altIdx = alt
+    m.altCount = stream.alts.Count()
     if stream.url = ""
         showMessage("Нет потока", "Для этого видео нет доступных ссылок. Проверьте подписку и настройки устройства на kino.pub (HLS4, HEVC, 4K).")
         return
@@ -1121,6 +1133,11 @@ sub startPlayback(req as Object)
     c.streamFormat = stream.fmt
     c.title = heading
     c.PlayStart = Int(req.start)
+    m.minBw = 0
+    if req.minBw <> invalid
+        m.minBw = req.minBw
+        c.setFields({ MinBandwidth: req.minBw })
+    end if
     m.video.content = c
     m.appView.visible = false
     m.detail.visible = false
@@ -1245,6 +1262,8 @@ sub onLaunch()
         m.autoEp = 1
         if a.season <> invalid then m.autoSeason = Int(Val(a.season))
         if a.ep <> invalid then m.autoEp = Int(Val(a.ep))
+        m.autoStart = 0
+        if a.start <> invalid then m.autoStart = Int(Val(a.start))
         kpFetch("/v1/items/" + a.autoplay, {}, "onAutoItem", "auto")
     end if
     if a.probe <> invalid
@@ -1605,11 +1624,11 @@ sub onApiStatus()
         m.apiText.color = "#A99BC4"
     else if st = "slow"
         m.apiDot.color = "#FFB020"
-        m.apiText.text = "Kino.pub тормозит: " + note
+        m.apiText.text = "Kino.pub медленно: " + note
         m.apiText.color = "#FFC857"
     else
         m.apiDot.color = "#FF5A5F"
-        m.apiText.text = "Kino.pub: " + note + ". Попробуйте позже"
+        m.apiText.text = "Kino.pub: " + note + ". Повторите позже"
         m.apiText.color = "#FF8A8E"
     end if
 end sub
@@ -1673,7 +1692,7 @@ sub onAutoItem(event as Object)
         si = m.autoSeason - 1
         ei = m.autoEp - 1
     end if
-    startPlayback({ item: it, season: si, epIdx: ei, start: 0 })
+    startPlayback({ item: it, season: si, epIdx: ei, start: m.autoStart })
 end sub
 
 sub onProgressTick()
@@ -1691,9 +1710,27 @@ sub onVideoState()
     else if st = "finished"
         onFinished()
     else if st = "error"
+        print "KPERR code="; m.video.errorCode; " msg="; m.video.errorMsg
+        print "KPERR info="; FormatJson(m.video.errorInfo)
+        print "KPERR stream="; m.streamMeta.kind; " "; m.streamMeta.w; "x"; m.streamMeta.h; " "; m.streamMeta.codec; " url="; m.video.content.url
         msg = m.video.errorMsg
+        if Instr(1, FormatJson(m.video.errorInfo), "403") > 0
+            m.global.apiNote = "видеосервер отвечает 403"
+            m.global.apiStatus = "error"
+        end if
+        ' запасные типы потока при ошибке CDN
+        if m.play <> invalid and not m.isTrailer and m.video.position < 5 and m.altIdx + 1 < m.altCount
+            p = m.play
+            m.video.control = "stop"
+            startPlayback({ item: p.item, season: p.season, epIdx: p.epIdx, start: p.start, altIdx: m.altIdx + 1 })
+            m.nextHint.text = "Поток недоступен, пробую другой тип: " + m.streamMeta.kind
+            m.nextHint.visible = true
+            return
+        end if
         stopPlayback(false)
-        showMessage("Ошибка воспроизведения", msg)
+        hint = ""
+        if Instr(1, FormatJson(m.video.errorInfo), "403") > 0 then hint = " Сервер видео kino.pub отвечает 403: проблема на стороне сервиса, попробуйте позже или другую серию."
+        showMessage("Ошибка воспроизведения", msg + hint)
     end if
 end sub
 

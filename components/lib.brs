@@ -220,23 +220,18 @@ function pickStream(files as Dynamic) as Object
     if best = invalid then best = files[0]
     u = best.url
     if u = invalid then return none
-    res = { url: "", fmt: "hls", kind: "", w: 0, h: 0, codec: "" }
+    res = { url: "", fmt: "hls", kind: "", w: 0, h: 0, codec: "", alts: [] }
     if best.w <> invalid then res.w = best.w
     if best.h <> invalid then res.h = best.h
     if best.codec <> invalid then res.codec = UCase(best.codec)
-    if u.hls4 <> invalid
-        res.url = u.hls4
-        res.kind = "HLS4"
-    else if u.hls2 <> invalid
-        res.url = u.hls2
-        res.kind = "HLS2"
-    else if u.hls <> invalid
-        res.url = u.hls
-        res.kind = "HLS"
-    else if u.http <> invalid
-        res.url = u.http
-        res.fmt = "mp4"
-        res.kind = "HTTP"
+    if u.hls4 <> invalid then res.alts.Push({ url: u.hls4, fmt: "hls", kind: "HLS4" })
+    if u.hls2 <> invalid then res.alts.Push({ url: u.hls2, fmt: "hls", kind: "HLS2" })
+    if u.hls <> invalid then res.alts.Push({ url: u.hls, fmt: "hls", kind: "HLS" })
+    if u.http <> invalid then res.alts.Push({ url: u.http, fmt: "mp4", kind: "HTTP" })
+    if res.alts.Count() > 0
+        res.url = res.alts[0].url
+        res.fmt = res.alts[0].fmt
+        res.kind = res.alts[0].kind
     end if
     return res
 end function

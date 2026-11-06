@@ -1,5 +1,11 @@
 # Kino.pub для Roku
 
+<p align="center">
+  <a href="https://www.paypal.com/donate?business=XYTW3ATYGDABJ&no_recurring=0&item_name=Contribute+to+fueling+productive+AI+sessions+with+vital+coffee+energy.&currency_code=USD">
+    <img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" alt="Donate with PayPal" />
+  </a>
+</p>
+
 Неофициальный клиент сервиса [kino.pub](https://kino.pub) для приставок и телевизоров Roku: каталог фильмов и сериалов, «Я смотрю», закладки, подборки, поиск (с русской клавиатурой), выбор озвучки и субтитров, фильтры, отметки просмотра и продолжение с места остановки. Интерфейс сделан в стиле Roku и рассчитан на управление обычным пультом. Нужна своя действующая подписка на kino.pub.
 
 > Проект не связан с kino.pub и Roku. Канал ставится в режиме разработчика и в Roku Channel Store не публикуется.

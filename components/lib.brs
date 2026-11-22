@@ -154,6 +154,9 @@ function makeItemNode(it as Object) as Object
     if r = "" then r = fmtRating(it.kinopoisk_rating)
     n.ShortDescriptionLine1 = r
     if it.year <> invalid then n.ShortDescriptionLine2 = it.year.ToStr()
+    if it.hLabel <> invalid
+        if it.hLabel <> "" then n.ShortDescriptionLine2 = it.hLabel
+    end if
     if it.total <> invalid and it.watched <> invalid
         n.ShortDescriptionLine2 = it.watched.ToStr() + " из " + it.total.ToStr()
         left = it.total - it.watched
@@ -173,10 +176,34 @@ function nodesFromItems(items as Object) as Object
     return out
 end function
 
+function historyItems(list as Object) as Object
+    out = []
+    for each h in list
+        if Type(h) = "roAssociativeArray" and h.item <> invalid
+            it = h.item
+            it.hLabel = ""
+            if h.media <> invalid
+                sn = 0
+                en = 0
+                if h.media.snumber <> invalid then sn = h.media.snumber
+                if h.media.number <> invalid then en = h.media.number
+                if sn > 0 and en > 0
+                    it.hLabel = "С" + sn.ToStr() + " Э" + en.ToStr()
+                else if en > 1
+                    it.hLabel = "Э" + en.ToStr()
+                end if
+            end if
+            out.Push(it)
+        end if
+    end for
+    return out
+end function
+
 function extractItems(res as Object) as Object
     if res.json <> invalid
         if Type(res.json) = "roAssociativeArray"
             if res.json.items <> invalid then return res.json.items
+            if res.json.history <> invalid then return historyItems(res.json.history)
         end if
     end if
     return []

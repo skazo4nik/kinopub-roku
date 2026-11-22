@@ -85,6 +85,7 @@ sub init()
         { id: "search", title: "", heading: "Поиск", ctype: "" }
         { id: "home", title: "Главная", ctype: "" }
         { id: "watching", title: "Я смотрю", ctype: "" }
+        { id: "history", title: "История", ctype: "" }
         { id: "movies", title: "Фильмы", ctype: "movie" }
         { id: "serials", title: "Сериалы", ctype: "serial" }
         { id: "k4", title: "4K", ctype: "" }
@@ -277,6 +278,11 @@ sub showSection(idx as Integer)
         loadSettings()
     else if sec.id = "watching"
         loadWatching()
+    else if sec.id = "history"
+        m.gridKind = "history"
+        m.histSeen = {}
+        m.hint.text = "Последние просмотренные, новые сверху"
+        loadGrid(true)
     else if sec.id = "bookmarks"
         m.gridKind = "bookmarks"
         m.gridNodes = invalid
@@ -591,6 +597,8 @@ sub loadGrid(reset as Boolean)
         if m.fGenre <> "" then params.genre = m.fGenre
         if m.fCountry <> "" then params.country = m.fCountry
         if m.fYear <> "" then params.year = m.fYear
+    else if m.gridKind = "history"
+        path = "/v1/history"
     else if m.gridKind = "collections"
         path = "/v1/collections"
     else if m.gridKind = "collection"
@@ -606,6 +614,7 @@ sub onGridResult(event as Object)
     if checkAuth(res) then return
     m.loading = false
     items = extractItems(res)
+    if m.gridKind = "history" then items = dedupeHistory(items)
     m.page = m.page + 1
     m.total = m.page
     if res.json <> invalid
@@ -631,7 +640,7 @@ sub onGridResult(event as Object)
 end sub
 
 sub onGridFocus(event as Object)
-    if m.gridKind <> "items" and m.gridKind <> "collections" then return
+    if m.gridKind <> "items" and m.gridKind <> "collections" and m.gridKind <> "history" then return
     if m.loading or m.gridNodes = invalid then return
     if m.page >= m.total then return
     idx = event.getData()
@@ -652,6 +661,18 @@ sub onGridItem(event as Object)
         openDetail(node.id)
     end if
 end sub
+
+function dedupeHistory(items as Object) as Object
+    out = []
+    for each it in items
+        key = "k" + it.id.ToStr()
+        if not m.histSeen.DoesExist(key)
+            m.histSeen[key] = true
+            out.Push(it)
+        end if
+    end for
+    return out
+end function
 
 function gridHint() as String
     h = "Сортировка: " + m.sorts[m.sortIdx].title
@@ -881,7 +902,7 @@ end sub
 sub onDetailClosed()
     m.detail.visible = false
     m.appView.visible = true
-    if m.dirty and m.sections[m.secIdx].id = "home"
+    if m.dirty and (m.sections[m.secIdx].id = "home" or m.sections[m.secIdx].id = "history")
         m.dirty = false
         m.pendingFocus = true
         showSection(m.secIdx)

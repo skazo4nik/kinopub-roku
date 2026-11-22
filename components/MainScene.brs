@@ -52,6 +52,7 @@ sub init()
     m.altCount = 0
     m.minBw = 0
     m.hlsTried = false
+    m.bufSecs = 0
     m.retryReq = invalid
     m.isTrailer = false
     m.fGenre = ""
@@ -1141,6 +1142,7 @@ sub startPlayback(req as Object)
     m.altIdx = alt
     m.altCount = stream.alts.Count()
     m.hlsTried = (req.hlsTried = true)
+    m.bufSecs = 0
     if stream.url = ""
         showMessage("Нет потока", "Для этого видео нет доступных ссылок. Проверьте подписку и настройки устройства на kino.pub (HLS4, HEVC, 4K).")
         return
@@ -1152,6 +1154,7 @@ sub startPlayback(req as Object)
         heading = heading + " — S" + currentSeasonNumber().ToStr() + "E" + en
     end if
     m.streamMeta = stream
+    print "KPPLAY "; stream.kind; " "; stream.url
     c = CreateObject("roSGNode", "ContentNode")
     c.url = stream.url
     c.streamFormat = stream.fmt
@@ -1726,6 +1729,16 @@ sub onNextTick()
         m.nextHint.visible = false
         return
     end if
+    if m.video.state = "buffering" and m.video.position < 1
+        m.bufSecs = m.bufSecs + 1
+    else
+        m.bufSecs = 0
+    end if
+    if m.bufSecs >= 25
+        m.bufSecs = 0
+        stallFallback()
+        return
+    end if
     dur = m.video.duration
     left = dur - m.video.position
     if dur > 120 and left <= 20 and left > 0 and nextEpisodePos() <> invalid and m.video.state = "playing"
@@ -1733,6 +1746,24 @@ sub onNextTick()
         m.nextHint.visible = true
     else
         m.nextHint.visible = false
+    end if
+end sub
+
+sub stallFallback()
+    print "KPSTALL kind="; m.streamMeta.kind
+    if m.play = invalid then return
+    if not m.hlsTried and m.streamMeta.kind = "HLS4"
+        m.retryReq = m.play
+        m.video.control = "stop"
+        m.nextHint.text = "Поток завис, переключаю на HLS2…"
+        m.nextHint.visible = true
+        kpFetch("/v1/device/info", {}, "onRetryDev", "retry")
+    else if m.altIdx + 1 < m.altCount
+        p = m.play
+        m.video.control = "stop"
+        startPlayback({ item: p.item, season: p.season, epIdx: p.epIdx, start: p.start, altIdx: m.altIdx + 1 })
+        m.nextHint.text = "Поток завис, пробую другой тип: " + m.streamMeta.kind
+        m.nextHint.visible = true
     end if
 end sub
 
@@ -1756,6 +1787,7 @@ end sub
 
 sub onVideoState()
     st = m.video.state
+    print "KPSTATE "; st
     if st = "playing" and m.autoPanel = true
         m.autoPanel = false
         showTrackPanel()
